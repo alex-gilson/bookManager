@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
@@ -54,10 +55,24 @@ func main() {
 func postBooks(c *gin.Context) {
 
 	var newBook Book
-	if err := c.BindJSON(&newBook); err != nil {
+	var err error
+
+	if err = c.BindJSON(&newBook); err != nil {
 		return
 	}
-	_, err := db.Exec("INSERT INTO book (title, author, published_date, genre) VALUES (?, ?, ?, ?)", newBook.Title, newBook.Author, newBook.PublishedDate, newBook.Genre)
+
+	if newBook.Author == "" || newBook.Title == "" || newBook.Genre == "" {
+		c.IndentedJSON(http.StatusBadRequest, "Missing required fields")
+		return
+	}
+
+	_, err = time.Parse("2006-01-02", newBook.PublishedDate)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, "Invalid published_date format")
+		return
+	}
+
+	_, err = db.Exec("INSERT INTO book (title, author, published_date, genre) VALUES (?, ?, ?, ?)", newBook.Title, newBook.Author, newBook.PublishedDate, newBook.Genre)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 		return
@@ -87,7 +102,6 @@ func getBookByID(c *gin.Context) {
 func getBooks(c *gin.Context) {
 	var books []Book
 
-	// Build the SQL query with optional filters
 	query := "SELECT * FROM book WHERE 1=1"
 	params := c.Request.URL.Query()
 

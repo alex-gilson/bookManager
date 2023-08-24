@@ -49,6 +49,7 @@ func main() {
 	router.GET("/books", getBooks)
 	router.GET("/books/:id", getBookByID)
 	router.POST("/books", postBooks)
+	router.DELETE("/books/:id", deleteBookByID)
 	router.Run(":8080")
 }
 
@@ -155,4 +156,26 @@ func getBooks(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, books)
+}
+
+func deleteBookByID(c *gin.Context) {
+
+	var rowsAffected int64
+
+	id := c.Param("id")
+
+	res, err := db.Exec("DELETE FROM book WHERE id = ?", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete book"})
+		return
+	}
+
+	rowsAffected, err = res.RowsAffected()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete book"})
+	} else if rowsAffected == 0 {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Book not found"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"message": "Book deleted successfully"})
+	}
 }

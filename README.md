@@ -110,3 +110,17 @@
     "message": "Book deleted successfully"
 }
 ```
+
+# Database Description
+
+The database contains information about books, including their title, author, published date, and genre. The database uses MySQL as the backend.
+
+## Table: `book`
+
+The "book" table is the main component of the database, responsible for storing details about various books.
+
+- `id`: This column is of type `INT` and is defined as an auto-incrementing identifier. It is the primary key of the table, ensuring each book entry has a unique identifier.
+- `title`: A non-null string column (VARCHAR(128)) holding the title of a book.
+- `author`: A non-null string column (VARCHAR(255)) indicating the author of the book.
+- `published_date`: A non-null date column (DATE) representing the date of publication.
+- `genre`: A non-null string column (VARCHAR(64)) specifying the genre of the book.

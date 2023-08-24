@@ -46,10 +46,13 @@ func main() {
 	fmt.Println("Connected to mysql server.")
 
 	router := gin.Default()
-	router.GET("/books", getBooks)
-	router.GET("/books/:id", getBookByID)
-	router.POST("/books", postBooks)
-	router.DELETE("/books/:id", deleteBookByID)
+	v1 := router.Group("/v1")
+	{
+		v1.GET("/books", getBooks)
+		v1.GET("/books/:id", getBookByID)
+		v1.POST("/books", postBooks)
+		v1.DELETE("/books/:id", deleteBookByID)
+	}
 	router.Run(":8080")
 }
 

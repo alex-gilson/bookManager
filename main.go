@@ -123,11 +123,21 @@ func getBooks(c *gin.Context) {
 	}
 
 	if fromDate := params.Get("published_from"); fromDate != "" {
+		_, err := time.Parse("2006-01-02", fromDate)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, "Invalid published_from format")
+			return
+		}
 		query += " AND published_date >= \"" + fromDate + "\""
 	}
 
 	if toDate := params.Get("published_to"); toDate != "" {
 		query += " AND published_date <= \"" + toDate + "\""
+		_, err := time.Parse("2006-01-02", toDate)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, "Invalid published_to format")
+			return
+		}
 	}
 
 	rows, err := db.Query(query)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,8 +26,8 @@ func main() {
 
 	// Capture connection properties.
 	cfg := mysql.Config{
-		User:                 "root",
-		Passwd:               "",
+		User:                 os.Getenv("MYSQL_USER"),
+		Passwd:               os.Getenv("MYSQL_PASSWORD"),
 		Net:                  "tcp",
 		Addr:                 "127.0.0.1:3306",
 		DBName:               "books",

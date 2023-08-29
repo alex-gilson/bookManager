@@ -4,12 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
 	"time"
-
+	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
@@ -24,27 +22,37 @@ type Book struct {
 
 func main() {
 
-	// Capture connection properties.
-	cfg := mysql.Config{
-		User:                 os.Getenv("MYSQL_USER"),
-		Passwd:               os.Getenv("MYSQL_PASSWORD"),
-		Net:                  "tcp",
-		Addr:                 "127.0.0.1:3306",
-		DBName:               "books",
-		AllowNativePasswords: true,
-	}
-	// Get a database handle.
+	// Connect to the database with the name of the database container and it's login details.
+	fmt.Println("Connecting to db")
 	var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN())
+	db, err = sql.Open("mysql", "root:mypassword@tcp(db:3306)/testdb")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
+	// MySQL server isn't fully active yet.
+	// Block until connection is accepted.
+	for db.Ping() != nil {
+		fmt.Println("Attempting connection to db")
+		time.Sleep(5 * time.Second)
 	}
-	fmt.Println("Connected to mysql server.")
+	fmt.Println("Connected")
+
+	fmt.Println("Creating table")
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS book (
+		id              INT AUTO_INCREMENT NOT NULL,
+		title           VARCHAR(128) NOT NULL,
+		author          VARCHAR(255) NOT NULL,
+		published_date  DATE NOT NULL,
+		genre           VARCHAR(64) NOT NULL,
+		PRIMARY KEY (id)
+	);
+	`)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	router := gin.Default()
 	v1 := router.Group("/v1")
@@ -54,7 +62,7 @@ func main() {
 		v1.POST("/books", postBooks)
 		v1.DELETE("/books/:id", deleteBookByID)
 	}
-	router.Run(":8080")
+	router.Run(":80")
 }
 
 func postBooks(c *gin.Context) {

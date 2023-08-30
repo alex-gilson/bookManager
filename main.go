@@ -69,6 +69,7 @@ func postBooks(c *gin.Context) {
 
 	var newBook Book
 	var err error
+	var result sql.Result
 
 	if err = c.BindJSON(&newBook); err != nil {
 		return
@@ -85,12 +86,15 @@ func postBooks(c *gin.Context) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO book (title, author, published_date, genre) VALUES (?, ?, ?, ?)", newBook.Title, newBook.Author, newBook.PublishedDate, newBook.Genre)
+	result, err = db.Exec("INSERT INTO book (title, author, published_date, genre) VALUES (?, ?, ?, ?)", newBook.Title, newBook.Author, newBook.PublishedDate, newBook.Genre)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 		return
 	}
 
+	var insertedID int64
+	insertedID, err = result.LastInsertId()
+	newBook.ID = int(insertedID)
 	c.IndentedJSON(http.StatusCreated, newBook)
 
 }
